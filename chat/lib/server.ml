@@ -9,7 +9,7 @@ let with_can_write can_write ~f =
   result
 ;;
 
-let enqueue_msgs ~can_write ~msg_queues reader =
+let enqueue_msg ~can_write ~msg_queues reader =
   Log.Global.debug_s [%message "Reading msg pipe..."];
   match%bind Pipe.read reader with
   | `Eof ->
@@ -17,11 +17,23 @@ let enqueue_msgs ~can_write ~msg_queues reader =
     Deferred.unit
   | `Ok msg ->
     with_can_write can_write ~f:(fun () ->
-      Log.Global.info_s [%message "Read" (msg : string)];
+      Log.Global.debug_s [%message "Read" (msg : string)];
       Log.Global.debug_s [%message "Update all msgs queues..."];
       Hashtbl.iteri msg_queues ~f:(fun ~key ~data:queue ->
         Log.Global.debug_s [%message "Adding msg into queue" (key : int)];
         Queue.enqueue queue msg))
+;;
+
+let write_server_message ~can_write ~msg_queues msg =
+  with_can_write can_write ~f:(fun () ->
+    Hashtbl.iteri msg_queues ~f:(fun ~key ~data:queue ->
+      Log.Global.debug_s [%message "Adding msg into queue" (key : int)];
+      Queue.enqueue queue msg))
+;;
+
+let user_left ~can_write ~msg_queues =
+  let msg = "A user left the chat, bye!" in
+  write_server_message ~can_write ~msg_queues msg
 ;;
 
 let start ~port =
@@ -52,12 +64,12 @@ let start ~port =
        let _bus =
          Bus.subscribe_exn receiver [%here] ~f:(function
            | Text ->
-             enqueue_msgs ~can_write ~msg_queues:index_to_msg_queue wsreader
+             enqueue_msg ~can_write ~msg_queues:index_to_msg_queue wsreader
              |> don't_wait_for
            | opcode -> Opcode.log opcode)
        in
        let%bind () = Mvar.put can_write () in
-       let rec echo_loop () =
+       let rec loop () =
          Log.Global.debug_s [%message "Echo loop" (i : int)];
          match Writer.is_closed writer with
          | false ->
@@ -75,12 +87,12 @@ let start ~port =
                Pipe.write_if_open wswriter msg)
            in
            let%bind () = Clock.after (Time_float_unix.Span.of_ms 100.) in
-           echo_loop ()
+           loop ()
          | true ->
            Log.Global.info_s [%message "Bye" (i : int)];
            Hashtbl.remove index_to_msg_queue i;
-           Deferred.unit
+           user_left ~can_write ~msg_queues:index_to_msg_queue
        in
-       echo_loop ())
+       loop ())
   >>= Tcp.Server.close_finished
 ;;

@@ -14,3 +14,9 @@ format:
 	cd chat; dune fmt
 
 fmt: format
+
+client:
+	./chat/_build/default/bin/main.exe client
+
+server:
+	./chat/_build/default/bin/main.exe server

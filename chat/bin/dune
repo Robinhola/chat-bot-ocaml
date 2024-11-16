@@ -1,4 +1,18 @@
 (executable
  (public_name chat)
  (name main)
+ (preprocess
+  (pps ppx_jane))
  (libraries chat))
+
+; (rule
+;  (targets build_info.ml)
+;  (deps (universe))
+;  (action
+;   (with-stdout-to
+;    %{targets}
+;    (run
+;     bash
+;     -c
+;     "echo \"let build_timestamp = \\\"Build time: $(TZ=UTC date)\\\"\""))))
+;

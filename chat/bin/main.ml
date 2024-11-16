@@ -3,15 +3,6 @@ open! Core
 open! Async
 open Chat
 
-[@@@disable_unused_warnings]
-
-let filename_arg () =
-  let%map_open.Command filename =
-    flag "filename" (required string) ~doc:"FILE filename containing a float list Sexp.t"
-  in
-  filename
-;;
-
 let server_command =
   Command.async
     ~summary:"Running the server"
@@ -25,11 +16,12 @@ let server_command =
 let client_command =
   Command.async
     ~summary:"Running the client"
-    (let%map_open.Command () = Log.Global.set_level_via_param () in
+    (let%map_open.Command () = Log.Global.set_level_via_param ()
+     and username = User.arg () in
      fun () ->
        Log.Global.info_s [%message "Starting the client"];
        Log.Global.debug_s [%message "Debug enabled"];
-       Client.start ~host:"localhost" ~port:80)
+       Client.start ~host:"localhost" ~port:80 ~username)
 ;;
 
 let main_command =

@@ -2,14 +2,8 @@ open! Base
 open! Core
 open! Async
 
-let random_name () =
-  let i = Random.int 100 in
-  "User_" ^ Int.to_string i
-;;
-
-let start ~host ~port =
+let start ~host ~port ~username =
   let stdin = Reader.stdin |> Lazy.force |> Reader.pipe in
-  let name = random_name () in
   let host_and_port = Host_and_port.create ~host ~port in
   Tcp.with_connection
     ~timeout:(Time_float.Span.of_sec 5.)
@@ -44,7 +38,7 @@ let start ~host ~port =
             | `Ok line ->
               let line = String.strip line in
               Log.Global.debug_s [%message "Received from user" (line : string)];
-              let%bind () = Pipe.write_if_open wswriter (name ^ ": " ^ line) in
+              let%bind () = Pipe.write_if_open wswriter (username ^ ": " ^ line) in
               echo_loop ())
          | false, true -> echo_loop ()
          | true, _ ->

@@ -5,13 +5,13 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github robinhola/chat-bot-ocaml))
 
-(authors "Author Name")
+(authors "Robin Elrharbi-Fleury")
 
-(maintainers "Maintainer Name")
+(maintainers "Robin Elrharbi-Fleury")
 
-(license LICENSE)
+(license ../LICENSE)
 
 (documentation https://url/to/documentation)
 
@@ -19,8 +19,8 @@
  (name chat)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends ocaml dune async base core ppx_let async_websocket)
  (tags
-  (topics "to describe" your project)))
+  (topics "async_websocket" your project)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

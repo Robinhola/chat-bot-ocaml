@@ -1,6 +1,7 @@
 open! Base
 open! Core
 open! Async
+open Chat
 
 [@@@disable_unused_warnings]
 
@@ -17,7 +18,8 @@ let server_command =
     (let%map_open.Command () = Log.Global.set_level_via_param () in
      fun () ->
        Log.Global.info_s [%message "Starting the server"];
-       Deferred.unit)
+       Log.Global.debug_s [%message "Debug enabled"];
+       Server.start ~port:80)
 ;;
 
 let client_command =
@@ -26,12 +28,13 @@ let client_command =
     (let%map_open.Command () = Log.Global.set_level_via_param () in
      fun () ->
        Log.Global.info_s [%message "Starting the client"];
-       Deferred.unit)
+       Log.Global.debug_s [%message "Debug enabled"];
+       Client.start ~host:"localhost" ~port:80)
 ;;
 
 let main_command =
   Command.group
-    ~summary:"Simple trading engine"
+    ~summary:"Simple chat engine"
     [ "server", server_command; "client", client_command ]
 ;;
 
